@@ -2,6 +2,8 @@
 from ssl import SSL_ERROR_WANT_X509_LOOKUP
 from purchase_exceptions import InvalidPurchaseException
 from ticket_type_request import TicketTypeRequest
+from seatbooking.seat_reservation_service import SeatReservationService
+from paymentgateway.ticket_payment_service import TicketPaymentService
 
 class TicketService:
 
@@ -34,11 +36,11 @@ class TicketService:
       raise TypeError("All elements of ticket_type_requests must be instances of the correct Class (TicketTypeRequest)")
     
     # Check order size is > 0 and < 21, if valid, return total sets
-    total_seats = sum([el.get_ticket_number for el in ticket_type_requests])
+    total_seats = sum([el.get_ticket_number for el in ticket_type_requests if el.get_ticket_type != "INFANT"])
     if total_seats > 20:
         print("Single order from accound ID: " + str(account_id) + ", exceeds max of 20")
         raise InvalidPurchaseException
-    elif total_seats > 1:
+    elif total_seats < 1:
         print("Total seats for this order is less than 1")
         raise InvalidPurchaseException
 
@@ -56,4 +58,9 @@ class TicketService:
             cost += request.get_tickets_number * 20
         elif request.get_ticket_type == "CHILD":
             cost += request.get_tickets_number * 15
+    
+    # Make calls to payment and seat reservation services
+    SeatReservationService.reserve_seat(account_id, total_seats)
+    TicketPaymentService.make_payment(account_id, total_cost)
 
+    
