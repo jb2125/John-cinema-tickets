@@ -66,18 +66,17 @@ class Test_Ticket_Servic(unittest.TestCase):
 
     # ------------------- Finished set-up, starting test methods
     def test_validate_id(self):
-        # self.assertRaises(InvalidPurchaseException, self.ticket_service.
-        #     __validate_id, 0)
+        # self.ticket_service = TicketService()
         
-        # self.assertRaises(InvalidPurchaseException, self.ticket_service.__validate_id, '-1')
-        
-        # self.assertRaises(InvalidPurchaseException, self.ticket_service.
-        #     __validate_id, True)
-        # ticket_service = TicketService()
+        self.assertRaises(InvalidPurchaseException, self.ticket_service
+            ._TicketService__validate_id, 0)
+
+        self.assertRaises(InvalidPurchaseException, self.ticket_service
+            ._TicketService__validate_id, '-1')
+
         var_type = type((self.ticket_service._TicketService__validate_id(
             float(2))))
         self.assertEqual(var_type, int)
-        # self.assertEqual(self.ticket_servoce.__validate_id(float(2)), 2)
         
         
 if __name__ == "__main__":
