@@ -8,7 +8,10 @@ from paymentgateway.ticket_payment_service import TicketPaymentService
 class TicketService:
 
   """
-  purchase_tickets should be the only public method
+  -------- Assumptions:
+  - This Class will not be used statically, instances will be made
+  - 'ticket_type_requests' is a list of TicketTypeRequest instances, all
+  made under the same account_id
   """
 
   def __init__(self) -> None:
