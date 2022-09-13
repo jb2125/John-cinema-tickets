@@ -9,39 +9,48 @@ class TicketService:
 
   """
   -------- Assumptions:
-  - This Class will not be used statically, instances will be made
-  - 'ticket_type_requests' is a list of TicketTypeRequest instances, all
-  made under the same account_id
+  - This Class will not be used statically, instances will be made. (the
+  code in main implies this is the case).
+  - '__ticket_type_requests' is a list of TicketTypeRequest instances, all
+  made under the same __account_id
   """
 
   def __init__(self) -> None:
      pass
 
-  def purchase_tickets(self, account_id=None, ticket_type_requests=[]):
+  def purchase_tickets(self, __account_id=None, __ticket_type_requests=[]):
     
-    # Assuming 'ticket_type_requests' is a list of TicketTypeRequest
-    # instances, (made from the same account/account_id)
+    # Assuming '__ticket_type_requests' is a list of TicketTypeRequest
+    # instances, (made from the same account/__account_id)
 
     # First check that neither account ID nor requests are null entries
-    if account_id == None or ticket_type_requests == []:
-      print("Either account_id and/or order details is missing")
+    if __account_id == None or __ticket_type_requests == []:
+      print("Either __account_id and/or order details is missing")
       raise InvalidPurchaseException
 
-    # Run validation method on account_id
-    account_id = self.__validate_id(account_id)
+    # Run validation method on __account_id
+    __account_id = self.__validate_id(__account_id)
 
     # Run methd to check ticket_type_requests is of corect types
-    self.__validate_requests(ticket_type_requests)
+    self.__validate_requests(__ticket_type_requests)
+
+    #--------------------------------------------------------
+    # Validation complete, geting cost and making calls to
+    # 'SeatReservationService' and 'TicketPaymentService'
 
     # Run method to check order has at least one Adult ticket
-    self.__validate_one_adult(ticket_type_requests)
+    self.__validate_one_adult(__ticket_type_requests)
+
+    # Validate number of seats, if valid, save the number
+    self.__total_seats = self.__validate_order_size(__account_id,
+      __ticket_type_requests)
 
     # Run method to get cost of the order
-    total_cost = self.__calculate_cost(ticket_type_requests)
+    self.__total_cost = self.__calculate_cost(__ticket_type_requests)
     
     # Make calls to payment and seat reservation services
-    SeatReservationService.reserve_seat(account_id, total_seats)
-    TicketPaymentService.make_payment(account_id, total_cost)
+    SeatReservationService.reserve_seat(__account_id, self.__total_seats)
+    TicketPaymentService.make_payment(__account_id, self.__total_cost)
 
   
   # ---------------------------------------------------------------
@@ -54,48 +63,52 @@ class TicketService:
     invalid_id = type(account_id) == str and not account_id.isnumeric()
     invalid_id |= type(account_id) == float and account_id != int(account_id)
     invalid_id |= type(account_id) in [int, float] and account_id < 1
+    invalid_id |= type(account_id) not in [int, float, str]
     if invalid_id:
-      raise InvalidPurchaseException("account_id must be an integer > 0")
+      raise InvalidPurchaseException("__account_id must be an integer > 0")
     else: account_id = int(account_id)
     return account_id    # ensuring account_id is an int after call
 
-  # Check 'ticket_type_requests' contains only objects of Class:
+  # Check '__ticket_type_requests' contains only objects of Class:
   # 'TicketTypeRequest'
-  def __validate_requests(ticket_type_requests):
+  def __validate_requests(self, ticket_type_requests):
     requests_number = len(ticket_type_requests)
     types_correct = sum([type(el) == TicketTypeRequest for el in
       ticket_type_requests]) == requests_number
     if not types_correct:
-      raise TypeError("All elements of ticket_type_requests must be \
+      raise TypeError("All elements of __ticket_type_requests must be \
         instances of the correct Class (TicketTypeRequest)")
 
   # Check order size is > 0 and < 21, if valid, return total sets.
-  def __validate_order_size(account_id, ticket_type_requests):
-    total_seats = sum([el.get_ticket_number for el in ticket_type_requests 
-      if el.get_ticket_type != "INFANT"])
+  def __validate_order_size(self, account_id, ticket_type_requests):
+    total_seats = sum([el.get_tickets_number() for el in 
+      ticket_type_requests if el.get_ticket_type() != "INFANT"])
     if total_seats > 20:
-        print("Single order from accound ID: " + str(account_id) + ", exceeds max of 20")
+        print("Single order from accound ID: " + str(account_id) +
+          ", exceeds max of 20")
         raise InvalidPurchaseException
     elif total_seats < 1:
-        print("Total seats for this order is less than 1")
+        print("There are zero seats in this order")
         raise InvalidPurchaseException
     return total_seats
 
   # Validate that at least one adult is included in the order
-  def __validate_one_adult(ticket_type_requests):
-    adult_tickets = sum([el.get_tickets_number for el in ticket_type_requests if el.get_ticket_type == "ADULT"])
-    adult_tickets = sum(adult_tickets)
+  def __validate_one_adult(self, ticket_type_requests):
+    # Assuming ADULT ticket requets could occur any number of times,
+    # (including 0).
+    adult_tickets = sum([el.get_tickets_number() for el in 
+      ticket_type_requests if el.get_ticket_type() == "ADULT"])
     if adult_tickets == 0:
         print("Order must have at least 1 Adult ticket")
         raise InvalidPurchaseException
 
   # this method loops through the requests and calculates price
-  def __calculate_cost(ticket_type_requests):
+  def __calculate_cost(self, ticket_type_requests):
     total_cost = 0
     for request in ticket_type_requests:
-        if request.get_ticket_type == "ADULT":
-            cost += request.get_tickets_number * 20
-        elif request.get_ticket_type == "CHILD":
-            cost += request.get_tickets_number * 10
+        if request.get_ticket_type() == "ADULT":
+            total_cost += request.get_tickets_number() * 20
+        elif request.get_ticket_type() == "CHILD":
+            total_cost += request.get_tickets_number() * 10
     return total_cost
     
