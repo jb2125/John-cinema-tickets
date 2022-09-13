@@ -8,18 +8,19 @@ from paymentgateway.ticket_payment_service import TicketPaymentService
 class TicketService:
 
   """
-  -------- Assumptions:
+  Assumptions:
   - This Class will not be used statically, instances will be made. (the
   code in main implies this is the case).
   - '__ticket_type_requests' is a list of TicketTypeRequest instances, all
   made under the same __account_id
 
-  -------- Notes on this code:
+  Notes on this code:
   - To be robust, this code will accept non int account_id (and convert
   them, to int) as there's no indication they defineltty won't occur.
   - The class 'TicketTypeRequest' has been made immutable, (read comment
   there). For this class ('TicketService'), account_id and the ticket
-  type requestions are being made immutable.
+  type request are being made immutable. This avoids chance of them
+  getting mistanly changed by other code prior to payment and reservation.
   """
 
   def __init__(self):
@@ -41,16 +42,17 @@ class TicketService:
     # Run methd to check ticket_type_requests is of corect types
     self.__validate_requests(__ticket_type_requests)
 
-    #--------------------------------------------------------
-    # Validation complete, geting cost and making calls to
-    # 'SeatReservationService' and 'TicketPaymentService'
-
     # Run method to check order has at least one Adult ticket
     self.__validate_one_adult(__ticket_type_requests)
 
     # Validate number of seats, if valid, save the number
     self.total_seats = self.__validate_order_size(__account_id,
       __ticket_type_requests)
+
+
+    #--------------------------------------------------------
+    # Validation complete, geting cost and making calls to
+    # 'SeatReservationService' and 'TicketPaymentService'
 
     # Run method to get cost of the order
     self.total_cost = self.__calculate_cost(__ticket_type_requests)
@@ -88,16 +90,18 @@ class TicketService:
       raise TypeError("All elements of __ticket_type_requests must be \
         instances of the correct Class (TicketTypeRequest)")
 
-  # Check order size is > 0 and < 21, if valid, return total sets.
+  # Check order size is > 0 and < 21, if valid, return total seats.
   def __validate_order_size(self, account_id, ticket_type_requests):
     total_seats = sum([el.get_tickets_number() for el in 
       ticket_type_requests if el.get_ticket_type() != "INFANT"])
-    if total_seats > 20:
-        print("Single order from accound ID: " + str(account_id) +
-          ", exceeds max of 20")
+    total_people = sum([el.get_tickets_number() for el in 
+      ticket_type_requests])
+    if total_people > 20:
+        print("Tickets in single order from accound ID: " + 
+          str(account_id) + ", exceeds max of 20")
         raise InvalidPurchaseException
-    elif total_seats < 1:
-        print("There are zero seats in this order")
+    elif total_people < 1:
+        print("There are zero people in this order")
         raise InvalidPurchaseException
     return total_seats
 

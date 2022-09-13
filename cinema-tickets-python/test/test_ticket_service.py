@@ -8,16 +8,20 @@ from ticket_type_request import TicketTypeRequest as Request
 # Notes on imports: 'TickeTypeRequest' has been given a shorter alias
 # 'Request' as it'll be used a lot here (saving space).
 
-# ------------------- Starting the test class
+# ------------------------------------------------------------
+# Starting the test class
 
-class Test_Ticket_Servic(unittest.TestCase):
+class TestTicketServic(unittest.TestCase):
     
-    # A 'TicketService' object will be created for each test and referencing
-    # to a different auxiliary method each time (setUp can't be used
-    # effectively here). Where appropriate, boundry value analysis tests
-    # will be run. Testing both expected values and exceptions.
+    """
+    A 'TicketService' object will be created for each test and referencing
+    to a different auxiliary method each time (setUp can't be used
+    effectively here). Where appropriate, boundry value analysis tests
+    will be run. Testing both expected values and exceptions.
+    """
 
-    # ------------------- Starting the test methods
+    # --------------------------------------------------------
+    # Starting the test methods
     def test_validate_id(self):
         
         # Create object and reference alias for the method to test.
@@ -60,19 +64,19 @@ class Test_Ticket_Servic(unittest.TestCase):
         callable = TicketService()._TicketService__validate_order_size
         
         # Setting up invalid and valid args.
-        seats_low = [Request('ADULT', 0)]
-        seats_high1 = [Request('ADULT', 21)]
-        seats_high2 = [Request('ADULT', 10), Request('CHILD', 11)]
+        people_low = [Request('ADULT', 0)]
+        people_high1 = [Request('ADULT', 2), Request('INFANT', 21)]
+        people_high2 = [Request('ADULT', 10), Request('CHILD', 11)]
 
         valid_1 = [Request("ADULT", 20)]
         valid_2 = [Request("ADULT", 5), Request("CHILD", 5)]
         valid_3 = [Request("ADULT", 12), Request("CHILD", 3),
-            Request("INFANT", 20)]
+            Request("INFANT", 2)]
 
         # Run asserts.
-        self.assertRaises(InvalidPurchaseException, callable, 2, seats_low)
-        self.assertRaises(InvalidPurchaseException, callable, 2, seats_high1)
-        self.assertRaises(InvalidPurchaseException, callable, 2, seats_high2)
+        self.assertRaises(InvalidPurchaseException, callable, 2, people_low)
+        self.assertRaises(InvalidPurchaseException, callable, 2, people_high1)
+        self.assertRaises(InvalidPurchaseException, callable, 2, people_high2)
         
         self.assertEqual(callable(2, valid_1), 20)
         self.assertEqual(callable(2, valid_2), 10)
@@ -131,10 +135,15 @@ class Test_Ticket_Servic(unittest.TestCase):
         self.assertEqual(callable(order_3), order_3_cost)
         self.assertEqual(callable(order_verbose), order_verbose_cost)
 
-    # ------------- Main method of ticket service:
+
+    # -----------------------------------------------------------
+    # Test for main method of ticket service:
     def test_pirchase_tickets(self):
 
-        # Create object and reference alias for the method to test.
+        # Create object and reference alias for the method to test. This
+        # time a refrence to the object is needed, not just a method
+        # from it. The same instance will be used for all tests in this
+        # method, (to save a little on memory).
         ticket_service = TicketService()
         callable = ticket_service.purchase_tickets
 
@@ -155,10 +164,10 @@ class Test_Ticket_Servic(unittest.TestCase):
         order_verbose_cost = 150
         order_verbose_seats = 9
 
-        order_3 = [Request("ADULT", 10), Request("CHILD", 10),
-            Request("INFANT", 20)]
-        order_3_cost = 300
-        order_3_seats = 20
+        order_3 = [Request("ADULT", 10), Request("CHILD", 8),
+            Request("INFANT", 2)]
+        order_3_cost = 280
+        order_3_seats = 18
 
         # Check an invalid of each type, (check the auxiliaries run).
         invalid_request = [Request("ADULT", 2), Request("CHILD", 3), 7]
@@ -191,7 +200,8 @@ class Test_Ticket_Servic(unittest.TestCase):
         self.assertRaises(InvalidPurchaseException, callable, 2, invalid_no_adults)
 
 
-
+# ----------------------------------------------------
+# Make it slightly easier to trigger the tests
 if __name__ == "__main__":
     unittest.main()
 
