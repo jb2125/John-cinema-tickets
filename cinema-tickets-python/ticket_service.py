@@ -13,9 +13,16 @@ class TicketService:
   code in main implies this is the case).
   - '__ticket_type_requests' is a list of TicketTypeRequest instances, all
   made under the same __account_id
+
+  -------- Notes on this code:
+  - To be robust, this code will accept non int account_id (and convert
+  them, to int) as there's no indication they defineltty won't occur.
+  - The class 'TicketTypeRequest' has been made immutable, (read comment
+  there). For this class ('TicketService'), account_id and the ticket
+  type requestions are being made immutable.
   """
 
-  def __init__(self) -> None:
+  def __init__(self):
      pass
 
   def purchase_tickets(self, __account_id=None, __ticket_type_requests=[]):
@@ -25,7 +32,7 @@ class TicketService:
 
     # First check that neither account ID nor requests are null entries
     if __account_id == None or __ticket_type_requests == []:
-      print("Either __account_id and/or order details is missing")
+      print("Either account_id and/or order details is missing")
       raise InvalidPurchaseException
 
     # Run validation method on __account_id
@@ -42,20 +49,22 @@ class TicketService:
     self.__validate_one_adult(__ticket_type_requests)
 
     # Validate number of seats, if valid, save the number
-    self.__total_seats = self.__validate_order_size(__account_id,
+    self.total_seats = self.__validate_order_size(__account_id,
       __ticket_type_requests)
 
     # Run method to get cost of the order
-    self.__total_cost = self.__calculate_cost(__ticket_type_requests)
+    self.total_cost = self.__calculate_cost(__ticket_type_requests)
     
     # Make calls to payment and seat reservation services
-    SeatReservationService.reserve_seat(__account_id, self.__total_seats)
-    TicketPaymentService.make_payment(__account_id, self.__total_cost)
+    seat_booker = SeatReservationService()
+    pay_service = TicketPaymentService()
+    seat_booker.reserve_seat(__account_id, self.total_seats)
+    pay_service.make_payment(__account_id, self.total_cost)
 
   
   # ---------------------------------------------------------------
-  # All auxillary validation methods are below, (private, as these methods
-  # have been developed solely for this class):
+  # All auxillary (mostly validation) methods are below, (private, as these
+  # methods have been developed solely for this class):
  
   # Method to check account ID is valid, (check it's a non-trivial posiyive int, or
   # equivalent string or float.) Avoiding logic nesting in interest of speed
@@ -111,4 +120,7 @@ class TicketService:
         elif request.get_ticket_type() == "CHILD":
             total_cost += request.get_tickets_number() * 10
     return total_cost
+
+  
+
     

@@ -28,9 +28,12 @@ class Test_Ticket_Servic(unittest.TestCase):
         self.assertRaises(InvalidPurchaseException, callable, '-1')
         self.assertRaises(InvalidPurchaseException, callable, [2])
         
-        # Running asserts for valid account_numbers.
-        var_type = type((callable(float(2))))
-        self.assertEqual(var_type, int)
+        # Running asserts for valid account_numbers, testing an int is
+        # returned
+        self.assertEqual(callable(2), 2)
+        self.assertEqual(callable(1000000), 1000000)
+        self.assertEqual(callable(float(2)), 2)
+        self.assertEqual(callable('2'), 2)
 
     def test_request_list_validate(self):
         
@@ -128,7 +131,64 @@ class Test_Ticket_Servic(unittest.TestCase):
         self.assertEqual(callable(order_3), order_3_cost)
         self.assertEqual(callable(order_verbose), order_verbose_cost)
 
+    # ------------- Main method of ticket service:
+    def test_pirchase_tickets(self):
 
+        # Create object and reference alias for the method to test.
+        ticket_service = TicketService()
+        callable = ticket_service.purchase_tickets
+
+        # Creating orders to check seats and cost.
+        order_1 = [Request("ADULT", 1)]
+        order_1_cost = 20
+        order_1_seats = 1
+
+        order_2 = [Request("ADULT", 2), Request("CHILD", 3),
+            Request("INFANT", 2)]
+        order_2_cost = 70
+        order_2_seats = 5
+
+        # Checking verbose order here too.
+        order_verbose = [Request('ADULT', 2), Request("CHILD", 1),
+            Request("ADULT", 1), Request("CHILD", 2), Request("ADULT", 3),
+            Request("INFANT", 5)]
+        order_verbose_cost = 150
+        order_verbose_seats = 9
+
+        order_3 = [Request("ADULT", 10), Request("CHILD", 10),
+            Request("INFANT", 20)]
+        order_3_cost = 300
+        order_3_seats = 20
+
+        # Check an invalid of each type, (check the auxiliaries run).
+        invalid_request = [Request("ADULT", 2), Request("CHILD", 3), 7]
+        invalid_seats = [Request('ADULT', 21)]
+        invalid_no_adults = seats_low = [Request('CHILD', 2),
+            Request('ADULT', 0)]
+        # assert for invalid account number
+        self.assertRaises(InvalidPurchaseException, callable, 0, order_1)
+
+        # Run asserts. Call method then check the attributes are correct.
+        callable(2, order_1)
+        self.assertEqual(ticket_service.total_seats, order_1_seats)
+        self.assertEqual(ticket_service.total_cost, order_1_cost)
+
+        callable(2, order_2)
+        self.assertEqual(ticket_service.total_seats, order_2_seats)
+        self.assertEqual(ticket_service.total_cost, order_2_cost)
+
+        callable(2, order_3)
+        self.assertEqual(ticket_service.total_seats, order_3_seats)
+        self.assertEqual(ticket_service.total_cost, order_3_cost)
+
+        callable(2, order_verbose)
+        self.assertEqual(ticket_service.total_seats, order_verbose_seats)
+        self.assertEqual(ticket_service.total_cost, order_verbose_cost)
+
+        # Run asserts for invalids
+        self.assertRaises(TypeError, callable, 2, invalid_request)
+        self.assertRaises(InvalidPurchaseException, callable, 2, invalid_seats)
+        self.assertRaises(InvalidPurchaseException, callable, 2, invalid_no_adults)
 
 
 
