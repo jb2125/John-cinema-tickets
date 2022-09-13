@@ -19,7 +19,7 @@ and efficient, mostly avaoiding loops  and nested logic.
 The code has many comments to explain what each section is doing. some of the comments 
 have a double line space above them and contain a long: '-----------' chain. This signifies a 
 section-end, next bit of code will be dealing with something different.
-  return
+<br/>
 The start of classes have a multi-line string literal containing some information on the Class.
 
 ## Considerations
